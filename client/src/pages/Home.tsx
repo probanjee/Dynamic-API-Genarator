@@ -33,7 +33,7 @@ export default function Home() {
 
   useEffect(() => {
     const startTime = Date.now();
-    const duration = 6000;
+    const duration = 800;
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(Math.floor((elapsed / duration) * 100), 100);
@@ -54,13 +54,17 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSupabaseUser(session?.user ?? null);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSupabaseUser(session?.user ?? null);
-    });
-    return () => subscription.unsubscribe();
+    try {
+      supabase.auth.getSession().then(({ data }) => {
+        setSupabaseUser(data?.session?.user ?? null);
+      }).catch(() => {});
+      const res = supabase.auth.onAuthStateChange((_event, session) => {
+        setSupabaseUser(session?.user ?? null);
+      });
+      return () => res?.data?.subscription?.unsubscribe?.();
+    } catch {
+      /* ignore unconfigured supabase error */
+    }
   }, []);
 
   const projectsQuery = trpc.projects.list.useQuery(undefined, { enabled: isAuthenticated });
@@ -92,7 +96,7 @@ export default function Home() {
         {/* Subtle Ambient Radial Glow Behind Card */}
         <div className="absolute w-[600px] h-[600px] bg-red-600/20 rounded-full blur-3xl pointer-events-none animate-pulse" />
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.8, rotateX: -30, rotateY: 30 }}
           animate={{ opacity: 1, scale: 1, rotateX: 0, rotateY: 0 }}
           transition={{ duration: 1.2, ease: [0.23, 1, 0.32, 1] }}
@@ -100,21 +104,21 @@ export default function Home() {
           style={{ perspective: 1200 }}
         >
           {/* 3D Assembling Circuit Logo */}
-          <motion.div 
+          <motion.div
             initial={{ scale: 0.5, opacity: 0, y: 30 }}
-            animate={{ 
-              scale: [0.8, 1.05, 1], 
-              opacity: 1, 
+            animate={{
+              scale: [0.8, 1.05, 1],
+              opacity: 1,
               y: [20, 0, 0],
               rotateY: [0, 15, 0, -15, 0],
               rotateX: [0, 8, 0, -8, 0]
             }}
-            transition={{ 
-              duration: 3, 
+            transition={{
+              duration: 3,
               times: [0, 0.4, 1],
               repeat: Infinity,
               repeatDelay: 0.5,
-              ease: "easeInOut" 
+              ease: "easeInOut"
             }}
             className="w-72 h-36 mx-auto flex items-center justify-center p-4 bg-black border-2 border-red-500 shadow-[0_0_30px_rgba(220,38,38,0.8),8px_8px_0px_0px_rgba(255,255,255,0.2)] relative"
           >
@@ -146,8 +150,8 @@ export default function Home() {
               <span className="font-bold text-red-500">{loadingProgress}%</span>
             </div>
             <div className="w-64 h-2 bg-zinc-900 mx-auto overflow-hidden border border-zinc-700 relative">
-              <motion.div 
-                className="h-full bg-gradient-to-r from-blue-500 via-red-600 to-white shadow-[0_0_10px_rgba(220,38,38,1)]" 
+              <motion.div
+                className="h-full bg-gradient-to-r from-blue-500 via-red-600 to-white shadow-[0_0_10px_rgba(220,38,38,1)]"
                 style={{ width: `${loadingProgress}%` }}
                 transition={{ duration: 0.1 }}
               />
@@ -213,9 +217,9 @@ export default function Home() {
         {/* Header */}
         <header className="border-b border-black/10 px-8 py-6 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <motion.div 
-              animate={{ 
-                scale: [1, 1.1, 1], 
+            <motion.div
+              animate={{
+                scale: [1, 1.1, 1],
                 rotateZ: [0, 3, -3, 0],
                 boxShadow: [
                   "3px 3px 0px 0px rgba(0,0,0,1), 0 0 10px rgba(220,38,38,0.5)",
@@ -251,12 +255,12 @@ export default function Home() {
                 <label className="block font-mono text-xs uppercase text-zinc-600 mb-1">Email Address</label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 w-4 h-4 text-zinc-400" />
-                  <Input 
-                    type="email" 
-                    className="border-black rounded-none font-mono pl-10" 
-                    placeholder="developer@apiforge.dev" 
-                    value={supabaseEmail} 
-                    onChange={(e) => setSupabaseEmail(e.target.value)} 
+                  <Input
+                    type="email"
+                    className="border-black rounded-none font-mono pl-10"
+                    placeholder="developer@apiforge.dev"
+                    value={supabaseEmail}
+                    onChange={(e) => setSupabaseEmail(e.target.value)}
                   />
                 </div>
               </div>
@@ -264,12 +268,12 @@ export default function Home() {
                 <label className="block font-mono text-xs uppercase text-zinc-600 mb-1">Password</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 w-4 h-4 text-zinc-400" />
-                  <Input 
-                    type="password" 
-                    className="border-black rounded-none font-mono pl-10" 
-                    placeholder="••••••••" 
-                    value={supabasePassword} 
-                    onChange={(e) => setSupabasePassword(e.target.value)} 
+                  <Input
+                    type="password"
+                    className="border-black rounded-none font-mono pl-10"
+                    placeholder="••••••••"
+                    value={supabasePassword}
+                    onChange={(e) => setSupabasePassword(e.target.value)}
                   />
                 </div>
               </div>
@@ -284,26 +288,26 @@ export default function Home() {
               </div>
 
               <div className="grid grid-cols-3 gap-2">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => handleSocialLogin('google')} 
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleSocialLogin('google')}
                   className="border-black rounded-none font-mono text-xs uppercase py-5"
                 >
                   Google
                 </Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => handleSocialLogin('azure')} 
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleSocialLogin('azure')}
                   className="border-black rounded-none font-mono text-xs uppercase py-5"
                 >
                   Microsoft
                 </Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => handleSocialLogin('github')} 
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleSocialLogin('github')}
                   className="border-black rounded-none font-mono text-xs uppercase py-5"
                 >
                   GitHub
@@ -311,16 +315,16 @@ export default function Home() {
               </div>
 
               <div className="text-center pt-2 space-y-2">
-                <button 
-                  type="button" 
-                  onClick={() => setIsSignUp(!isSignUp)} 
+                <button
+                  type="button"
+                  onClick={() => setIsSignUp(!isSignUp)}
                   className="font-mono text-xs text-zinc-600 underline hover:text-black block w-full"
                 >
                   {isSignUp ? "Already have an account? Sign In" : "Need an account? Sign Up"}
                 </button>
-                <button 
-                  type="button" 
-                  onClick={handleDemoLogin} 
+                <button
+                  type="button"
+                  onClick={handleDemoLogin}
                   className="font-mono text-xs text-red-600 font-bold hover:underline block w-full pt-1"
                 >
                   ⚡ Instant Demo Access (Bypass Auth)
@@ -331,7 +335,7 @@ export default function Home() {
         </Dialog>
 
         {/* Hero */}
-        <motion.main 
+        <motion.main
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
@@ -360,7 +364,7 @@ export default function Home() {
               <span className="text-red-600 font-bold">YAML / JSON</span>
             </div>
             <pre className="font-mono text-xs text-zinc-800 overflow-x-auto leading-relaxed">
-{`{
+              {`{
   "project": "Payment Gateway API",
   "version": "2.4.0",
   "runtime": "fastapi",
@@ -437,9 +441,9 @@ export default function Home() {
       <header className="border-b border-black/10 px-8 py-4 flex items-center justify-between bg-white sticky top-0 z-50">
         <div className="flex items-center space-x-6">
           <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setSelectedProjectId(null)}>
-            <motion.div 
-              animate={{ 
-                scale: [1, 1.1, 1], 
+            <motion.div
+              animate={{
+                scale: [1, 1.1, 1],
                 rotateZ: [0, 3, -3, 0],
                 boxShadow: [
                   "3px 3px 0px 0px rgba(0,0,0,1), 0 0 10px rgba(220,38,38,0.5)",
@@ -458,7 +462,7 @@ export default function Home() {
           <span className="text-zinc-300">/</span>
           <div className="flex items-center space-x-2">
             <span className="font-mono text-xs uppercase text-zinc-500">Workspace:</span>
-            <select 
+            <select
               className="bg-zinc-100 border border-black/20 font-mono text-xs px-3 py-1.5 focus:outline-none"
               value={activeProject?.id || ""}
               onChange={(e) => setSelectedProjectId(Number(e.target.value))}
@@ -513,32 +517,32 @@ export default function Home() {
           <div className="space-y-4 pt-4">
             <div>
               <label className="block font-mono text-xs uppercase text-zinc-600 mb-1">Project Name</label>
-              <Input 
-                className="border-black rounded-none font-mono" 
-                placeholder="e.g. E-Commerce Checkout API" 
-                value={newProjectName} 
-                onChange={(e) => setNewProjectName(e.target.value)} 
+              <Input
+                className="border-black rounded-none font-mono"
+                placeholder="e.g. E-Commerce Checkout API"
+                value={newProjectName}
+                onChange={(e) => setNewProjectName(e.target.value)}
               />
             </div>
             <div>
               <label className="block font-mono text-xs uppercase text-zinc-600 mb-1">Description</label>
-              <Input 
-                className="border-black rounded-none font-mono" 
-                placeholder="Handles secure order checkout and payment processing" 
-                value={newProjectDesc} 
-                onChange={(e) => setNewProjectDesc(e.target.value)} 
+              <Input
+                className="border-black rounded-none font-mono"
+                placeholder="Handles secure order checkout and payment processing"
+                value={newProjectDesc}
+                onChange={(e) => setNewProjectDesc(e.target.value)}
               />
             </div>
             <div>
               <label className="block font-mono text-xs uppercase text-zinc-600 mb-1">Base URL</label>
-              <Input 
-                className="border-black rounded-none font-mono" 
-                placeholder="https://api.shop.com" 
-                value={newProjectBaseUrl} 
-                onChange={(e) => setNewProjectBaseUrl(e.target.value)} 
+              <Input
+                className="border-black rounded-none font-mono"
+                placeholder="https://api.shop.com"
+                value={newProjectBaseUrl}
+                onChange={(e) => setNewProjectBaseUrl(e.target.value)}
               />
             </div>
-            <Button 
+            <Button
               onClick={() => {
                 const finalName = newProjectName.trim() || "Untitled API Project";
                 createProjectMutation.mutate({ name: finalName, description: newProjectDesc, baseUrl: newProjectBaseUrl });
@@ -690,12 +694,11 @@ function ApiDesignerTab({ projectId }: { projectId: number }) {
               endpoints.map(ep => (
                 <tr key={ep.id} className="border-b border-black/10 hover:bg-zinc-50">
                   <td className="p-4 font-mono font-bold">
-                    <span className={`px-2 py-1 text-xs uppercase ${
-                      ep.method === 'GET' ? 'bg-blue-100 text-blue-800' :
-                      ep.method === 'POST' ? 'bg-green-100 text-green-800' :
-                      ep.method === 'PUT' ? 'bg-amber-100 text-amber-800' :
-                      ep.method === 'DELETE' ? 'bg-red-100 text-red-800' : 'bg-purple-100 text-purple-800'
-                    }`}>
+                    <span className={`px-2 py-1 text-xs uppercase ${ep.method === 'GET' ? 'bg-blue-100 text-blue-800' :
+                        ep.method === 'POST' ? 'bg-green-100 text-green-800' :
+                          ep.method === 'PUT' ? 'bg-amber-100 text-amber-800' :
+                            ep.method === 'DELETE' ? 'bg-red-100 text-red-800' : 'bg-purple-100 text-purple-800'
+                      }`}>
                       {ep.method}
                     </span>
                   </td>
@@ -855,7 +858,7 @@ function SchemaBuilderTab({ projectId }: { projectId: number }) {
             </div>
             <div>
               <label className="block font-mono text-xs uppercase text-zinc-600 mb-1">JSON Schema Definition (JSON)</label>
-              <textarea 
+              <textarea
                 className="w-full border border-black p-4 font-mono text-xs h-40 bg-white focus:outline-none"
                 value={fieldsText}
                 onChange={(e) => setFieldsText(e.target.value)}
@@ -914,8 +917,8 @@ function MiddlewareConfigTab({ projectId }: { projectId: number }) {
                 {JSON.stringify(mw.config, null, 2)}
               </pre>
             </div>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => saveMutation.mutate({ id: mw.id, projectId, name: mw.name, type: mw.type, enabled: mw.enabled ? 0 : 1, config: mw.config })}
               className="border-black font-mono text-xs uppercase rounded-none"
             >
@@ -1154,7 +1157,7 @@ function AiCopilotTab({ projectId }: { projectId: number }) {
         </div>
 
         <div className="pt-4 border-t border-black/10 flex space-x-3">
-          <Input 
+          <Input
             className="border-black rounded-none font-mono bg-white flex-1"
             placeholder="e.g. Design a robust Stripe webhook endpoint with HMAC signature verification..."
             value={prompt}
@@ -1327,11 +1330,10 @@ function TeamRbacTab({ projectId }: { projectId: number }) {
                 <tr key={m.id} className="border-b border-black/10">
                   <td className="p-4 font-bold">{m.email}</td>
                   <td className="p-4">
-                    <span className={`px-2 py-0.5 text-[10px] uppercase font-bold ${
-                      m.role === 'OWNER' ? 'bg-red-100 text-red-800' :
-                      m.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' :
-                      m.role === 'DEVELOPER' ? 'bg-blue-100 text-blue-800' : 'bg-zinc-200 text-zinc-800'
-                    }`}>
+                    <span className={`px-2 py-0.5 text-[10px] uppercase font-bold ${m.role === 'OWNER' ? 'bg-red-100 text-red-800' :
+                        m.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' :
+                          m.role === 'DEVELOPER' ? 'bg-blue-100 text-blue-800' : 'bg-zinc-200 text-zinc-800'
+                      }`}>
                       {m.role}
                     </span>
                   </td>
