@@ -10,7 +10,7 @@ function createTestContext(): TrpcContext {
     openId: "test-user-openapi",
     email: "test@apiforge.dev",
     name: "Test Architect",
-    loginMethod: "manus",
+    loginMethod: "oauth",
     role: "user",
     createdAt: new Date(),
     updatedAt: new Date(),
